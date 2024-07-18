@@ -133,6 +133,13 @@ namespace MindBoxLib
 			MarkAreaDirty();
 		}
 
+		/// <summary>
+		/// Проверяет, существует ли треугольник с заданными сторонами
+		/// </summary>
+		/// <param name="a">Первая сторона</param>
+		/// <param name="b">Вторая сторона</param>
+		/// <param name="c">Третья сторона</param>
+		/// <returns>True, если треугольник существует, иначе false.</returns>
 		protected static bool IsValidTriangle(double a, double b, double c)
 		{
 			return a + b > c && a + c > b && b + c > a;
