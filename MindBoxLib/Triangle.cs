@@ -15,7 +15,40 @@ namespace MindBoxLib
 		/// Кешированное значение площади, чтобы не пересчитывать её при каждом запросе.
 		/// </summary>
 		private double _Area;
-		public double Area => _Area;
+		
+		private bool _AreaHasChanged;
+		protected void MarkAreaDirty()
+		{
+			_AreaHasChanged = true;
+		}
+
+		public double Area
+		{
+			get
+			{
+				if (_AreaHasChanged)
+				{
+					//Прямоугольный треугольник, где C - гипотенуза
+					if ( (SideA * SideA + SideB * SideB).AlmostEquals(SideC * SideC) )
+						_Area = SideA * SideB / 2;
+					//Прямоугольный треугольник, где B - гипотенуза
+					else if ( (SideA * SideA + SideC * SideC).AlmostEquals(SideB * SideB) )
+						_Area = SideA * SideC / 2;
+					//Прямоугольный треугольник, где A - гипотенуза
+					else if ( (SideB * SideB + SideC * SideC).AlmostEquals(SideA * SideA) )
+						_Area = SideB * SideC / 2;
+					//Обычный треугольник
+					else
+					{
+						double p = (SideA + SideB + SideC) / 2;
+						_Area = Math.Sqrt(p*(p-SideA)*(p-SideB)*(p-SideC));
+					}
+				}
+				return _Area;
+			}
+		}
+
+		
 
 		/// <summary>
 		/// Значение первой стороны
@@ -32,10 +65,10 @@ namespace MindBoxLib
 				if (value <= 0)
 					throw new ArgumentOutOfRangeException(nameof(value), $"Side should be greater than 0.");
 				else if (!IsValidTriangle(value, SideB, SideC))
-					throw new ArgumentOutOfRangeException(nameof(value), $"Triangle with sides {value}; {SideB}; {SideC} is not valid. {nameof(SideA)} should be greater than {SideB+SideC}");
+					throw new ArgumentOutOfRangeException(nameof(value), $"Triangle with sides {value}; {SideB}; {SideC} is not valid. {nameof(SideA)} should be less than {SideB+SideC}");
 
 				_SideA = value;
-				RecomputeArea();
+				MarkAreaDirty();
 			}
 		}
 
@@ -54,10 +87,10 @@ namespace MindBoxLib
 				if (value <= 0)
 					throw new ArgumentOutOfRangeException(nameof(value), $"{nameof(SideB)} should be greater than 0.");
 				else if (!IsValidTriangle(SideA, value, SideC))
-					throw new ArgumentOutOfRangeException(nameof(value), $"Triangle with sides {SideA}; {value}; {SideC} is not valid. {nameof(SideB)} should be greater than {SideA+SideC}");
+					throw new ArgumentOutOfRangeException(nameof(value), $"Triangle with sides {SideA}; {value}; {SideC} is not valid. {nameof(SideB)} should be less than {SideA+SideC}");
 
 				_SideB = value;
-				RecomputeArea();
+				MarkAreaDirty();
 			}
 		}
 
@@ -76,10 +109,10 @@ namespace MindBoxLib
 				if (value <= 0)
 					throw new ArgumentOutOfRangeException(nameof(value), $"{nameof(SideC)} should be greater than 0.");
 				else if (!IsValidTriangle(SideA, SideB, value))
-					throw new ArgumentOutOfRangeException(nameof(value), $"Triangle with sides {SideA}; {SideB}; {value} is not valid. {nameof(SideC)} should be greater than {SideA+SideB}");
+					throw new ArgumentOutOfRangeException(nameof(value), $"Triangle with sides {SideA}; {SideB}; {value} is not valid. {nameof(SideC)} should be less than {SideA+SideB}");
 
 				_SideC = value;
-				RecomputeArea();
+				MarkAreaDirty();
 			}
 		}
 
@@ -97,28 +130,7 @@ namespace MindBoxLib
 			_SideA = sideA;
 			_SideB = sideB;
 			_SideC = sideC;
-		}
-
-		/// <summary>
-		/// Обновить значение площади.
-		/// </summary>
-		private void RecomputeArea()
-		{
-			//Прямоугольный треугольник, где C - гипотенуза
-			if ( (SideA * SideA + SideB * SideB).AlmostEquals(SideC * SideC) )
-				_Area = SideA * SideB / 2;
-			//Прямоугольный треугольник, где B - гипотенуза
-			else if ( (SideA * SideA + SideC * SideC).AlmostEquals(SideB * SideB) )
-				_Area = SideA * SideC / 2;
-			//Прямоугольный треугольник, где A - гипотенуза
-			else if ( (SideB * SideB + SideC * SideC).AlmostEquals(SideA * SideA) )
-				_Area = SideA * SideC / 2;
-			//Обычный треугольник
-			else
-			{
-				double p = (SideA + SideB + SideC) / 2;
-				_Area = Math.Sqrt(p*(p-SideA)*(p-SideB)*(p-SideC));
-			}
+			MarkAreaDirty();
 		}
 
 		protected static bool IsValidTriangle(double a, double b, double c)
